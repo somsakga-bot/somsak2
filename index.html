@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ระบบสแกนใบหน้าเข้าห้องอบรม</title>
+<link href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500&family=Noto+Sans+Thai:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#120405;--panel:#1e0a0d;--line:#3a1317;--red:#9b1c26;--red2:#c4313c;--tx:#f5e9e7;--mut:#b99a98;--g:#3ddc84;--o:#ffa62b;--r:#ff5252;--b:#7fa6ff}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(1200px 500px at 50% -10%,#3b0b11 0,var(--bg) 60%) fixed;color:var(--tx);font:16px/1.5 'Noto Sans Thai',sans-serif;padding:0 14px 40px}
+.wrap{max-width:1080px;margin:0 auto}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;padding:22px 0 14px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+h1{font:500 26px/1.2 Mitr,sans-serif;margin:0}
+.clock{font:500 28px Mitr;color:#fff;text-align:right}.clock small{display:block;font:400 13px 'Noto Sans Thai';color:var(--mut)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0}
+.st{background:var(--panel);border:1px solid var(--line);border-left:5px solid;padding:12px 14px;border-radius:6px}
+.st b{display:block;font:500 38px/1.1 Mitr}.st span{color:var(--mut);font-size:14px}
+.st.g{border-color:var(--g)}.st.g b{color:var(--g)}.st.o{border-color:var(--o)}.st.o b{color:var(--o)}
+.st.r{border-color:var(--r)}.st.r b{color:var(--r)}.st.b{border-color:var(--b)}.st.b b{color:var(--b)}
+.bar{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin-bottom:18px}
+button{font:600 16px 'Noto Sans Thai';border:1px solid var(--red2);background:var(--panel);color:var(--tx);padding:14px;border-radius:6px;cursor:pointer}
+button:hover{background:#2a0f13}button.p{background:linear-gradient(#b3202c,#7d1119);font-size:20px;padding:18px}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #fff;outline-offset:2px}
+button:disabled{opacity:.5}
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:6px;background:var(--panel)}
+table{width:100%;border-collapse:collapse;min-width:640px}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line)}
+th{background:#2b0b10;font-weight:600;font-size:14px}td.c,th.c{text-align:center}
+.m{font-size:20px;font-weight:700}.m.g{color:var(--g)}.m.o{color:var(--o)}.m.r{color:var(--r)}.m.b{color:var(--b)}
+.mut{color:var(--mut)}
+.ov{position:fixed;inset:0;background:rgba(5,0,1,.85);display:none;align-items:center;justify-content:center;padding:12px;z-index:9}
+.ov.on{display:flex}
+.box{background:#190709;border:1px solid var(--red);border-radius:8px;width:100%;max-width:560px;max-height:94vh;overflow:auto;padding:18px}
+.box.w{max-width:900px}
+.box h2{font:500 21px Mitr;margin:0 0 12px}
+label{display:block;font-size:14px;color:var(--mut);margin:8px 0 2px}
+input,select{width:100%;padding:11px;border-radius:6px;border:1px solid var(--line);background:#0d0305;color:var(--tx);font:16px 'Noto Sans Thai'}
+video{width:100%;border-radius:6px;background:#000;transform:scaleX(-1);max-height:56vh}
+.msg{margin:10px 0;padding:10px;border-radius:6px;background:#2a0f13;text-align:center}
+.msg.g{background:#0f3a22;color:var(--g)}.msg.o{background:#47300a;color:var(--o)}.msg.r{background:#4a1111;color:var(--r)}
+.shots{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
+.shots div{text-align:center;font-size:13px}
+.shots img{width:100%;aspect-ratio:1;object-fit:cover;border:1px dashed var(--red2);border-radius:6px;background:#0d0305;display:block;margin-bottom:6px}
+.shots button{padding:8px;font-size:14px;width:100%}
+.row{display:flex;gap:8px;margin-top:12px}.row button{flex:1}
+.thumb{width:40px;height:40px;border-radius:50%;object-fit:cover}
+td select{padding:6px}
+@media(max-width:640px){.stats{grid-template-columns:1fr 1fr}.bar{grid-template-columns:1fr 1fr}.bar .p{grid-column:1/3}h1{font-size:21px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><h1>ระบบสแกนใบหน้าเข้าห้องอบรม</h1><div class="clock"><span id="clk">--:--:--</span><small id="dt"></small></div></header>
+<section class="stats">
+<div class="st g"><b id="nP">0</b><span>✔ เข้าอบรมแล้ว (ก่อน 08:31 น.)</span></div>
+<div class="st o"><b id="nL">0</b><span>✔ มาอบรมสาย (08:31–10:00 น.)</span></div>
+<div class="st r"><b id="nA">0</b><span>✖ ขาดอบรม (หลัง 10:00 น.)</span></div>
+<div class="st b"><b id="nE">0</b><span>ลากิจ</span></div>
+</section>
+<div class="bar">
+<button class="p" id="bScan">สแกนเข้าอบรม</button>
+<button id="bReg">บันทึกข้อมูล</button>
+<button id="bAdm">จัดการข้อมูล</button>
+</div>
+<div class="mut" id="sum" style="margin-bottom:8px"></div>
+<div class="tw"><table><thead><tr><th>#</th><th>ชื่อ-นามสกุล</th><th>สังกัด</th><th>เวลาสแกน</th><th class="c">เข้าอบรมแล้ว</th><th class="c">มาสาย</th><th class="c">ขาดอบรม</th><th class="c">ลากิจ</th></tr></thead><tbody id="tb"><tr><td colspan="8" class="mut">กำลังโหลด...</td></tr></tbody></table></div>
+</div>
+<div class="ov" id="ov"><div class="box" id="box"></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.js"></script>
+<script>
+// ====== ตั้งค่า: ใส่ Web app URL ที่ได้จาก Apps Script ======
+const API = 'https://script.google.com/macros/s/AKfycbwRgYLlGauXKEFh9QrtLQtw2by9wDXq2JJRVcuP-NoZEgx3QYpAvoD8fjdBYukQ-oxB/exec';
+const MODELS = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model/';
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function api(action, data) {
+  const r = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(Object.assign({ action }, data || {})) });
+  const j = await r.json();
+  if (!j.ok) throw new Error(j.error || 'เกิดข้อผิดพลาด');
+  return j;
+}
+/* ---------- นาฬิกา + แดชบอร์ด ---------- */
+let offset = 0;
+setInterval(() => {
+  const d = new Date(Date.now() + offset);
+  $('clk').textContent = d.toLocaleTimeString('th-TH', { hour12: false, timeZone: 'Asia/Bangkok' });
+  $('dt').textContent = d.toLocaleDateString('th-TH', { dateStyle: 'full', timeZone: 'Asia/Bangkok' });
+}, 1000);
+const mark = (s, k) => s === k ? { P: '<span class="m g">✔</span>', L: '<span class="m o">✔</span>', A: '<span class="m r">✖</span>', E: '<span class="m b">✔</span>' }[k] : '';
+async function loadDash() {
+  try {
+    const j = await api('dashboard');
+    $('nP').textContent = j.count.P; $('nL').textContent = j.count.L; $('nA').textContent = j.count.A; $('nE').textContent = j.count.E;
+    $('sum').textContent = `ผู้ลงทะเบียนทั้งหมด ${j.total} คน · ยังไม่สแกน ${j.count.W} คน`;
+    $('tb').innerHTML = j.rows.length ? j.rows.map((r, i) => `<tr><td>${i + 1}</td><td>${esc(r.name)}</td><td>${esc(r.org)}</td><td>${esc(r.time) || '-'}</td>` +
+      ['P', 'L', 'A', 'E'].map(k => `<td class="c">${mark(r.status, k)}</td>`).join('') + '</tr>').join('')
+      : '<tr><td colspan="8" class="mut">ยังไม่มีผู้ลงทะเบียน กด "บันทึกข้อมูล" เพื่อเพิ่มผู้เข้าอบรม</td></tr>';
+  } catch (e) { $('tb').innerHTML = `<tr><td colspan="8" style="color:var(--r)">โหลดข้อมูลไม่สำเร็จ: ${esc(e.message)}</td></tr>`; }
+}
+loadDash(); setInterval(loadDash, 20000);
+
+/* ---------- ตัวช่วยกล้อง/โมเดล ---------- */
+let stream = null, loop = null, modelsOk = null;
+const opts = () => new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 });
+function loadModels() {
+  return modelsOk || (modelsOk = Promise.all([faceapi.nets.tinyFaceDetector.loadFromUri(MODELS), faceapi.nets.faceLandmark68Net.loadFromUri(MODELS), faceapi.nets.faceRecognitionNet.loadFromUri(MODELS)]));
+}
+async function startCam(v) {
+  stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 640 } }, audio: false });
+  v.srcObject = stream; v.setAttribute('playsinline', ''); await v.play();
+}
+function stopCam() { clearInterval(loop); loop = null; if (stream) stream.getTracks().forEach(t => t.stop()); stream = null; }
+function openBox(html, wide) { $('box').className = 'box' + (wide ? ' w' : ''); $('box').innerHTML = html; $('ov').classList.add('on'); }
+function closeBox() { stopCam(); $('ov').classList.remove('on'); $('box').innerHTML = ''; loadDash(); }
+const setMsg = (t, c) => { const m = $('msg'); if (m) { m.textContent = t; m.className = 'msg ' + (c || ''); } };
+
+/* ---------- สแกนเข้าอบรม ---------- */
+$('bScan').onclick = async () => {
+  openBox('<h2>สแกนใบหน้าเข้าอบรม</h2><video id="v" muted></video><div class="msg" id="msg">กำลังเปิดกล้อง...</div><div class="row"><button id="x">ปิด</button></div>');
+  $('x').onclick = closeBox;
+  try {
+    await startCam($('v'));
+    setMsg('กำลังโหลดระบบจดจำใบหน้า...');
+    const [, fj] = await Promise.all([loadModels(), api('faces')]);
+    const lab = fj.faces.filter(f => f.d && f.d.length).map(f => new faceapi.LabeledFaceDescriptors(f.id, f.d.map(a => new Float32Array(a))));
+    if (!lab.length) return setMsg('ยังไม่มีผู้ลงทะเบียนใบหน้าในระบบ', 'r');
+    const names = {}; fj.faces.forEach(f => names[f.id] = f.name);
+    const matcher = new faceapi.FaceMatcher(lab, 0.5);
+    setMsg('มองตรงที่กล้อง ระบบกำลังสแกนอัตโนมัติ...');
+    let last = '', hit = 0, busy = false;
+    loop = setInterval(async () => {
+      if (busy || !stream) return; busy = true;
+      try {
+        const d = await faceapi.detectSingleFace($('v'), opts()).withFaceLandmarks().withFaceDescriptor();
+        if (!d) { hit = 0; return; }
+        const m = matcher.findBestMatch(d.descriptor);
+        if (m.label === 'unknown') { hit = 0; setMsg('ไม่พบข้อมูลใบหน้านี้ในระบบ', 'r'); return; }
+        hit = m.label === last ? hit + 1 : 1; last = m.label;
+        setMsg('พบ ' + names[m.label] + ' กำลังยืนยัน...');
+        if (hit >= 3) {
+          clearInterval(loop); loop = null;
+          const r = await api('scan', { id: m.label });
+          const t = { P: ['เข้าอบรมแล้ว ✔ ', 'g'], L: ['มาสาย ✔ ', 'o'], A: ['เลยเวลา 10:00 น. บันทึกเป็นขาดอบรม ✖ ', 'r'], E: ['ลากิจ ', 'o'] }[r.status];
+          setMsg((r.already ? 'สแกนไปแล้ววันนี้: ' : '') + t[0] + r.name + ' เวลา ' + r.time, t[1]);
+          stopCam(); setTimeout(closeBox, 4000);
+        }
+      } catch (e) { setMsg(e.message, 'r'); } finally { busy = false; }
+    }, 600);
+  } catch (e) { setMsg(e.name === 'NotAllowedError' ? 'กรุณาอนุญาตการใช้กล้อง' : 'ผิดพลาด: ' + e.message, 'r'); }
+};
+
+/* ---------- บันทึกข้อมูลผู้เข้าอบรม ---------- */
+$('bReg').onclick = async () => {
+  const slots = ['หน้าตรง', 'หน้าข้างซ้าย', 'หน้าข้างขวา'], photos = [null, null, null], desc = [null, null, null];
+  openBox(`<h2>บันทึกข้อมูลผู้เข้าอบรม</h2>
+  <label>ชื่อ</label><input id="fn" autocomplete="off"><label>นามสกุล</label><input id="ln" autocomplete="off">
+  <label>เบอร์โทร</label><input id="ph" type="tel" inputmode="tel"><label>สังกัด</label><input id="og">
+  <video id="v" muted style="margin-top:12px"></video>
+  <div class="shots">${slots.map((s, i) => `<div><img id="im${i}" alt=""><button data-i="${i}" class="cap">ถ่าย${s}</button></div>`).join('')}</div>
+  <div class="msg" id="msg">กำลังเปิดกล้อง...</div>
+  <div class="row"><button id="x">ยกเลิก</button><button class="p" id="sv" style="font-size:16px;padding:14px">บันทึกข้อมูล</button></div>`);
+  $('x').onclick = closeBox;
+  try { await startCam($('v')); setMsg('กำลังโหลดระบบจดจำใบหน้า...'); await loadModels(); setMsg('กรอกข้อมูล แล้วกดถ่ายภาพทั้ง 3 มุม'); }
+  catch (e) { setMsg('เปิดกล้องไม่ได้: ' + e.message, 'r'); }
+  document.querySelectorAll('.cap').forEach(b => b.onclick = async () => {
+    const i = +b.dataset.i; setMsg('กำลังตรวจจับใบหน้า...');
+    try {
+      const d = await faceapi.detectSingleFace($('v'), opts()).withFaceLandmarks().withFaceDescriptor();
+      if (!d) return setMsg('ไม่พบใบหน้า กรุณาลองใหม่ให้เห็นหน้าชัดเจน', 'r');
+      const v = $('v'), c = document.createElement('canvas'); c.width = 240; c.height = Math.round(240 * v.videoHeight / v.videoWidth);
+      c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+      const url = c.toDataURL('image/jpeg', 0.7); $('im' + i).src = url;
+      photos[i] = url.split(',')[1]; desc[i] = Array.from(d.descriptor).map(x => +x.toFixed(4));
+      setMsg('บันทึกภาพ' + slots[i] + 'แล้ว', 'g');
+    } catch (e) { setMsg(e.message, 'r'); }
+  });
+  $('sv').onclick = async () => {
+    const f = { fn: $('fn').value.trim(), ln: $('ln').value.trim(), phone: $('ph').value.trim(), org: $('og').value.trim() };
+    if (!f.fn || !f.ln || !f.phone || !f.org) return setMsg('กรุณากรอกข้อมูลให้ครบ', 'r');
+    if (photos.includes(null)) return setMsg('กรุณาถ่ายภาพใบหน้าให้ครบ 3 มุม', 'r');
+    $('sv').disabled = true; setMsg('กำลังบันทึก...');
+    try { await api('register', Object.assign(f, { photos, desc })); stopCam(); setMsg('บันทึกข้อมูลเรียบร้อย ✔', 'g'); setTimeout(closeBox, 1800); }
+    catch (e) { setMsg(e.message, 'r'); $('sv').disabled = false; }
+  };
+};
+
+/* ---------- จัดการข้อมูล (แอดมิน) ---------- */
+let code = '';
+$('bAdm').onclick = () => {
+  openBox('<h2>จัดการข้อมูล</h2><label>รหัสแอดมิน</label><input id="cd" type="password" inputmode="numeric" autocomplete="off"><div class="msg" id="msg" style="display:none"></div><div class="row"><button id="x">ปิด</button><button class="p" id="go" style="font-size:16px;padding:14px">เข้าสู่ระบบ</button></div>');
+  $('x').onclick = closeBox;
+  const go = async () => {
+    code = $('cd').value.trim(); $('msg').style.display = 'block'; setMsg('กำลังตรวจสอบ...');
+    try { await api('adminCheck', { code }); adminPanel(); } catch (e) { setMsg('รหัสไม่ถูกต้อง', 'r'); }
+  };
+  $('go').onclick = go; $('cd').onkeydown = e => e.key === 'Enter' && go();
+};
+async function adminPanel() {
+  openBox('<h2>จัดการข้อมูลผู้เข้าอบรม</h2><div class="msg" id="msg">กำลังโหลด...</div><div class="tw"><table><thead><tr><th>รูป</th><th>ชื่อ-นามสกุล</th><th>เบอร์โทร</th><th>สังกัด</th><th>สถานะวันนี้</th><th></th></tr></thead><tbody id="at"></tbody></table></div><div class="row"><button id="x">ปิด</button></div>', true);
+  $('x').onclick = closeBox;
+  try {
+    const [a, d] = await Promise.all([api('adminList', { code }), api('dashboard')]);
+    const st = {}; d.rows.forEach(r => st[r.id] = r.status);
+    $('msg').style.display = 'none';
+    $('at').innerHTML = a.list.map(p => `<tr><td><img class="thumb" src="${esc(p.img)}" alt=""></td><td>${esc(p.name)}</td><td>${esc(p.phone)}</td><td>${esc(p.org)}</td>
+      <td><select data-id="${esc(p.id)}" class="ss">${[['', 'ยังไม่สแกน'], ['P', 'เข้าอบรมแล้ว'], ['L', 'มาสาย'], ['A', 'ขาดอบรม'], ['E', 'ลากิจ']].map(o => `<option value="${o[0]}"${(st[p.id] || '') === o[0] ? ' selected' : ''}>${o[1]}</option>`).join('')}</select></td>
+      <td><button data-id="${esc(p.id)}" class="del" style="padding:6px 10px;font-size:14px">ลบ</button></td></tr>`).join('') || '<tr><td colspan="6" class="mut">ไม่มีข้อมูล</td></tr>';
+    document.querySelectorAll('.ss').forEach(s => s.onchange = async () => {
+      try { await api('adminStatus', { code, id: s.dataset.id, status: s.value }); } catch (e) { alert(e.message); }
+    });
+    document.querySelectorAll('.del').forEach(b => b.onclick = async () => {
+      if (!confirm('ลบผู้เข้าอบรมคนนี้?')) return;
+      try { await api('adminDelete', { code, id: b.dataset.id }); adminPanel(); } catch (e) { alert(e.message); }
+    });
+  } catch (e) { setMsg(e.message, 'r'); }
+}
+</script>
+</body>
+</html>
