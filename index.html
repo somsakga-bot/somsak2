@@ -71,7 +71,7 @@ td select{padding:6px}
 <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.js"></script>
 <script>
 // ====== ตั้งค่า: ใส่ Web app URL ที่ได้จาก Apps Script ======
-const API = 'https://script.google.com/macros/s/AKfycbwRgYLlGauXKEFh9QrtLQtw2by9wDXq2JJRVcuP-NoZEgx3QYpAvoD8fjdBYukQ-oxB/exec';
+const API = 'https://script.google.com/macros/s/AKfycbyRfcC9GQmWbHwujtYhJKvPHBEmXfuDh6_lf5kCGfrNGsDxHBF_fInk2F28VZKXXxGD/exec';
 const MODELS = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model/';
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -146,9 +146,13 @@ $('bScan').onclick = async () => {
           setMsg((r.already ? 'สแกนไปแล้ววันนี้: ' : '') + t[0] + r.name + ' เวลา ' + r.time, t[1]);
           stopCam(); setTimeout(closeBox, 4000);
         }
-      } catch (e) { setMsg(e.message, 'r'); } finally { busy = false; }
+      } catch (e) js
+try { await api('adminCheck', { code }); adminPanel(); }
+catch (e) { setMsg(e.message === 'รหัสไม่ถูกต้อง' ? 'รหัสไม่ถูกต้อง' : 'เชื่อมต่อระบบไม่ได้: ' + e.message, 'r'); }
     }, 600);
-  } catch (e) { setMsg(e.name === 'NotAllowedError' ? 'กรุณาอนุญาตการใช้กล้อง' : 'ผิดพลาด: ' + e.message, 'r'); }
+  } catch (e) js
+try { await api('adminCheck', { code }); adminPanel(); }
+catch (e) { setMsg(e.message === 'รหัสไม่ถูกต้อง' ? 'รหัสไม่ถูกต้อง' : 'เชื่อมต่อระบบไม่ได้: ' + e.message, 'r'); }
 };
 
 /* ---------- บันทึกข้อมูลผู้เข้าอบรม ---------- */
