@@ -146,11 +146,9 @@ $('bScan').onclick = async () => {
           setMsg((r.already ? 'สแกนไปแล้ววันนี้: ' : '') + t[0] + r.name + ' เวลา ' + r.time, t[1]);
           stopCam(); setTimeout(closeBox, 4000);
         }
-      } catch (e)
+      } catch (e)try { await api('adminCheck', { code }); adminPanel(); }
     }, 600);
-  } catch (e) js
-try { await api('adminCheck', { code }); adminPanel(); }
-catch (e) { setMsg(e.message === 'รหัสไม่ถูกต้อง' ? 'รหัสไม่ถูกต้อง' : 'เชื่อมต่อระบบไม่ได้: ' + e.message, 'r'); }
+  } catch (e)catch (e) { setMsg(e.message === 'รหัสไม่ถูกต้อง' ? 'รหัสไม่ถูกต้อง' : 'เชื่อมต่อระบบไม่ได้: ' + e.message, 'r'); }
 };
 
 /* ---------- บันทึกข้อมูลผู้เข้าอบรม ---------- */
