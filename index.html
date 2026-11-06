@@ -73,6 +73,7 @@ label{font-size:13px;color:var(--mut);display:block;margin-bottom:3px}
   <h2>สแกนใบหน้าเข้าอบรม</h2>
   <div class="cam"><video id="vScan" playsinline muted></video><div class="ring"></div></div>
   <div class="msg" id="scanMsg"></div>
+  <button class="b-scan" id="scanPhotoBtn" style="width:100%;margin-bottom:10px;display:none" onclick="pickFile('scan')">📸 ถ่ายด้วยกล้องเครื่อง</button>
   <button class="b-gray" style="width:100%" onclick="closeScan()">ปิดกล้อง</button>
 </div></div>
 <div class="res" id="res"></div>
@@ -132,6 +133,7 @@ label{font-size:13px;color:var(--mut);display:block;margin-bottom:3px}
   <button class="b-del" style="width:100%;margin-top:10px" onclick="delEdit()">ลบผู้เข้าอบรม</button>
   <button class="b-gray" style="width:100%;margin-top:10px" onclick="hide('mEdit')">ยกเลิก</button>
 </div></div>
+<input type="file" id="fileIn" accept="image/*" capture="user" style="display:none">
 <div id="toast"></div>
 
 <script>
@@ -170,7 +172,12 @@ function loadModels() {
 }
 async function startCam(v) {
   stopCam();
-  stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }, audio: false });
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('เบราว์เซอร์นี้เปิดกล้องตรงไม่ได้ (ต้องเป็น HTTPS และเปิดด้วย Chrome)');
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }, audio: false });
+  } catch (e) {
+    throw new Error({ NotAllowedError: 'ไม่ได้รับอนุญาตใช้กล้อง', NotFoundError: 'ไม่พบกล้อง', NotReadableError: 'กล้องถูกแอปอื่นใช้อยู่' }[e.name] || e.message);
+  }
   v.srcObject = stream; await v.play();
 }
 function stopCam() { if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; } }
@@ -180,7 +187,7 @@ const OPT = () => new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThr
 let scanning = false, matcher = null, people = {}, streak = 0, lastId = '';
 const sm = t => $('#scanMsg').textContent = t;
 async function openScan() {
-  show('mScan'); sm('กำลังเตรียมกล้อง...'); streak = 0; lastId = '';
+  show('mScan'); sm('กำลังเตรียมกล้อง...'); streak = 0; lastId = ''; $('#scanPhotoBtn').style.display = 'none';
   try {
     await loadModels();
     const f = await api('faces');
@@ -190,7 +197,18 @@ async function openScan() {
     matcher = new faceapi.FaceMatcher(f.faces.map(p => new faceapi.LabeledFaceDescriptors(p.id, p.d.map(a => new Float32Array(a)))), 0.5);
     await startCam($('#vScan'));
     scanning = true; sm('จัดใบหน้าให้อยู่ในกรอบ'); loop();
-  } catch (e) { sm('เปิดกล้องไม่ได้: ' + e.message); }
+  } catch (e) {
+    sm('เปิดกล้องตรงไม่ได้ (' + e.message + ') — ใช้ปุ่มถ่ายด้วยกล้องเครื่องแทน');
+    if (matcher) $('#scanPhotoBtn').style.display = 'block';
+  }
+}
+async function scanFromCanvas(c) {
+  sm('กำลังตรวจสอบใบหน้า...');
+  const r = await faceapi.detectSingleFace(c, new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.4 })).withFaceLandmarks().withFaceDescriptor();
+  if (!r) return sm('ไม่พบใบหน้าในภาพ ลองถ่ายใหม่');
+  const b = matcher.findBestMatch(r.descriptor);
+  if (b.label === 'unknown') return sm('ไม่พบข้อมูลใบหน้านี้ในระบบ ลองถ่ายใหม่');
+  await submitScan(b.label);
 }
 async function loop() {
   if (!scanning) return;
@@ -236,15 +254,37 @@ async function openReg(admin) {
   [0, 1, 2].forEach(i => $('#i' + i).style.display = 'none');
   show('mReg'); rm('กำลังโหลดโมเดลใบหน้า...');
   try { await loadModels(); await startCam($('#vReg')); rm('จัดใบหน้าให้อยู่ในกรอบ แล้วกดถ่ายแต่ละมุม'); }
-  catch (e) { rm('เปิดกล้องไม่ได้: ' + e.message); }
+  catch (e) { rm('เปิดกล้องตรงไม่ได้ (' + e.message + ') — กดปุ่ม "ถ่าย" เพื่อใช้กล้องของเครื่องแทน'); }
 }
+let fileMode = 'reg', pend = 0;
+function pickFile(mode) { fileMode = mode; $('#fileIn').value = ''; $('#fileIn').click(); }
+async function fileToCanvas(file, w) {
+  let bmp;
+  try { bmp = await createImageBitmap(file, { imageOrientation: 'from-image' }); }
+  catch (e) { bmp = await new Promise((ok, no) => { const im = new Image(); im.onload = () => ok(im); im.onerror = no; im.src = URL.createObjectURL(file); }); }
+  const bw = bmp.width, bh = bmp.height, h = Math.round(w * bh / bw);
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  c.getContext('2d').drawImage(bmp, 0, 0, w, h); return c;
+}
+$('#fileIn').addEventListener('change', async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try {
+    if (fileMode === 'scan') await scanFromCanvas(await fileToCanvas(f, 480));
+    else await processShot(pend, await fileToCanvas(f, 320));
+  } catch (err) { toast('อ่านภาพไม่ได้: ' + err.message); }
+});
 async function shot(i) {
+  pend = i;
   const v = $('#vReg');
-  if (!v.videoWidth) return toast('กล้องยังไม่พร้อม');
+  if (!stream || !v.videoWidth) { pickFile('reg'); return; }
   const w = 320, h = Math.round(w * v.videoHeight / v.videoWidth);
   const c = document.createElement('canvas'); c.width = w; c.height = h;
   c.getContext('2d').drawImage(v, 0, 0, w, h);
+  await processShot(i, c);
+}
+async function processShot(i, c) {
   rm('กำลังตรวจจับใบหน้า...');
+  await loadModels();
   const r = await faceapi.detectSingleFace(c, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.4 })).withFaceLandmarks().withFaceDescriptor();
   if (!r) { rm('ไม่พบใบหน้า ลองถ่ายใหม่'); return; }
   photos[i] = c.toDataURL('image/jpeg', 0.75).split(',')[1];
