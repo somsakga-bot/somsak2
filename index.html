@@ -28,6 +28,24 @@ video,.shot img{width:100%;max-width:420px;border-radius:12px;background:#000;tr
 #msg{font-size:1.15rem;margin:10px 0;min-height:1.5em}.sc{overflow-x:auto}
 #toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#14532d;padding:10px 18px;border-radius:10px;display:none;z-index:9}
 @media print{body{background:#fff;color:#000}header,.np,button{display:none!important}.card,.st{background:#fff;border-color:#999;color:#000}th,td{color:#000;border-color:#999}h1{color:#000}.v{display:none!important}#v-dash{display:block!important}.pies small{color:#333}}
+
+/* ===== จัดหน้ากึ่งกลาง ===== */
+header{text-align:center}nav{justify-content:center}h1{font-size:1.4rem}
+main{max-width:980px;margin-left:auto;margin-right:auto}
+.card,h2,#range,#msg,.shot{text-align:center}h2{margin:14px 0}
+.row{justify-content:center;align-items:flex-end}.row>*{flex:1 1 180px}.row>button{flex:0 1 220px}
+.row>.card{margin-bottom:0}
+label{text-align:center}input,select{text-align:center;text-align-last:center}
+th,td{text-align:center!important}table{margin:0 auto}
+#gl,.pies small,.pies{text-align:center!important}
+#gl ol{list-style-position:inside;padding:0!important}
+video,.shot img{display:block;margin:8px auto}
+section>button,.card>button{display:block;margin-left:auto;margin-right:auto}
+.slots{max-width:520px;margin:8px auto}
+#v-reg .card{max-width:640px;margin-left:auto;margin-right:auto}
+#lg{max-width:420px;margin-left:auto;margin-right:auto}
+#v-scan .card{max-width:760px;margin-left:auto;margin-right:auto}
+#v-reg .row>.card,#v-scan .row>.card{max-width:none}
 </style></head><body>
 <header class="np"><h1>🌿 ระบบสแกนใบหน้าเข้าอบรม</h1>
 <nav><button class="o on" data-v="dash">🏠 หน้าหลัก</button><button class="o" data-v="scan">สแกนเข้าอบรม</button><button class="o" data-v="reg">บันทึกข้อมูลล่วงหน้า</button><button class="o" data-v="adm">จัดการข้อมูล</button></nav></header>
@@ -58,7 +76,7 @@ video,.shot img{width:100%;max-width:420px;border-radius:12px;background:#000;tr
  <div class="card sc"><b>ผู้เข้าอบรม</b> <small id="adn" style="color:var(--mu)"></small><table><tbody id="ab"></tbody></table></div></div></section>
 </main><div id="toast"></div>
 <script>
-const API='https://script.google.com/macros/s/AKfycbwtpv0X953Xvr3sFbWYnGJXodw8ZwmK5bijwg6z5QkIrn2IhNpUCcMIQYeJ-1mswLda/exec';
+const API='PASTE_APPS_SCRIPT_WEB_APP_URL_HERE';
 const MU='https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model/';
 const $=i=>document.getElementById(i),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 let D={trainees:[],att:[],leave:[],settings:{},now:''},code='',ml=0,stream=null,run=false,PH=[null,null,null],DS=[null,null,null];
