@@ -76,16 +76,18 @@ section>button,.card>button{display:block;margin-left:auto;margin-right:auto}
  <div class="card sc"><b>ผู้เข้าอบรม</b> <small id="adn" style="color:var(--mu)"></small><table><tbody id="ab"></tbody></table></div></div></section>
 </main><div id="toast"></div>
 <script>
-const API='https://script.google.com/macros/s/AKfycbwtoz-2fqEd75S13LeVj_Mh-cZAm1H_rv0GN8zYj56yclMPTYuRmYNytKo5h7odFUgO/exec';
+const API='PASTE_APPS_SCRIPT_WEB_APP_URL_HERE';
 const MU='https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model/';
 const $=i=>document.getElementById(i),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 let D={trainees:[],att:[],leave:[],settings:{},now:''},code='',ml=0,stream=null,run=false,PH=[null,null,null],DS=[null,null,null];
 const nm=t=>(t.t?t.t+' ':'')+t.fn+' '+t.ln;
 function goHome(){document.querySelector('nav button[data-v=dash]').click()}
 const api=b=>fetch(API,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(b)}).then(r=>r.json());
-function toast(t){const e=$('toast');e.textContent=t;e.style.display='block';setTimeout(()=>e.style.display='none',3500)}
+function toast(t){const e=$('toast');e.textContent=t;e.style.display='block';setTimeout(()=>e.style.display='none',8000)}
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x==b));document.querySelectorAll('.v').forEach(v=>v.classList.toggle('on',v.id=='v-'+b.dataset.v));camOff();run=false;if(b.dataset.v=='dash'||b.dataset.v=='adm')load()});
-async function load(){try{D=await (await fetch(API)).json()}catch(e){return toast('เชื่อมต่อ Google Sheets ไม่ได้')}
+async function getD(){if(API.includes('PASTE'))throw'ยังไม่ได้ใส่ URL ของ Apps Script ในไฟล์ index.html (บรรทัด const API)';let r;try{r=await fetch(API)}catch(e){throw'ติดต่อ Apps Script ไม่ได้: ตรวจว่า URL ลงท้าย /exec และตั้งสิทธิ์เข้าถึงเป็น "ทุกคน (Anyone)"'}
+ const t=await r.text();try{const j=JSON.parse(t);if(j.error)throw j.error;return j}catch(e){throw typeof e=='string'?e:'Apps Script ตอบกลับผิดปกติ: ยังไม่ได้อนุญาตสิทธิ์ / ยังไม่ได้ Deploy เวอร์ชันใหม่ / โค้ดมีข้อผิดพลาด (ดูที่ Executions)'}}
+async function load(){try{D=await getD()}catch(e){return toast(e)}
  const s=D.settings,today=D.now.slice(0,10);$('range').textContent=s.start?`ช่วงอบรม: ${s.start} ถึง ${s.end}`:'ยังไม่ได้กำหนดช่วงวันที่อบรม (ตั้งที่ จัดการข้อมูล)';
  if(!$('dt').value)$('dt').value=today;$('s1').value=s.start||'';$('s2').value=s.end||'';render();adm()}
 $('dt').onchange=$('pd').onchange=()=>render();
@@ -117,7 +119,7 @@ async function cap(i){if(!stream||$('vr').style.display=='none')return toast('�
 async function save(){const f=['fn','ln','tel','org'].map(i=>$(i).value.trim());if(f.some(x=>!x)||PH.some(x=>!x))return toast('กรอกข้อมูลและถ่ายภาพให้ครบ 3 มุม');
  const r=await api({a:'register',t:$('tt').value.trim(),fn:f[0],ln:f[1],tel:f[2],org:f[3],d:DS,p:PH});if(r.error)return toast(r.error);toast('บันทึกเรียบร้อย ✔');
  ['tt','fn','ln','tel','org'].forEach(i=>$(i).value='');PH=[null,null,null];DS=[null,null,null];[0,1,2].forEach(i=>$('i'+i).removeAttribute('src'))}
-async function startScan(p){$('msg').textContent='';try{D=await (await fetch(API)).json()}catch(e){return toast('เชื่อมต่อไม่ได้')}
+async function startScan(p){$('msg').textContent='';try{D=await getD()}catch(e){return toast(e)}
  const L=D.trainees.filter(t=>t.d).map(t=>new faceapi.LabeledFaceDescriptors(t.id,[new Float32Array(JSON.parse(t.d)[0]),new Float32Array(JSON.parse(t.d)[1]),new Float32Array(JSON.parse(t.d)[2])]));
  if(!L.length)return toast('ยังไม่มีข้อมูลใบหน้าในระบบ');await camOn('vs');const M=new faceapi.FaceMatcher(L,.5);run=true;let last='',n=0;$('msg').textContent='กำลังสแกนคาบ'+p+'... มองกล้องตรง ๆ';
  (async function loop(){if(!run)return;const r=await det($('vs'));if(r){const m=M.findBestMatch(r.descriptor);if(m.label!='unknown'){n=m.label==last?n+1:1;last=m.label;if(n>=2){run=false;camOff();return done(m.label,p)}}else n=0}setTimeout(loop,400)})()}
