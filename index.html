@@ -19,7 +19,7 @@ label{display:block;color:var(--mu);font-size:.9rem;margin:8px 0 3px}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}.row>*{flex:1;min-width:140px}
 .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}@media(min-width:700px){.stats{grid-template-columns:repeat(4,1fr)}}
 .st{border-radius:14px;padding:14px;text-align:center;background:var(--card);border:2px solid}.st b{display:block;font-size:2rem}
-.pies{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;text-align:center}
+.pies{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;text-align:center}
 .pies small{display:block;color:var(--mu)}canvas{max-width:100%}
 table{width:100%;border-collapse:collapse}th,td{padding:8px;border-bottom:1px solid var(--line);text-align:left;font-size:.92rem}th{color:#4ade80}
 .g{color:#22c55e;font-weight:900}.or{color:var(--or);font-weight:900}.r{color:var(--rd);font-weight:900}.b{color:var(--bl)}
@@ -38,6 +38,7 @@ video,.shot img{width:100%;max-width:420px;border-radius:12px;background:#000;tr
  <h2 id="rt" style="color:#4ade80;font-size:1.05rem"></h2>
  <div class="stats" id="stats"></div>
  <div class="card"><b>สรุปแยกกลุ่ม (สังกัด)</b><div class="pies" id="pies" style="margin-top:10px"></div></div>
+ <div class="card"><b>รายชื่อแยกตามกลุ่ม</b><div class="pies" id="gl" style="text-align:left;margin-top:10px"></div></div>
  <div class="card sc"><table><thead><tr><th>ชื่อ-สกุล</th><th>สังกัด</th><th>เวลา</th><th>สถานะ</th></tr></thead><tbody id="tb"></tbody></table></div>
 </section>
 <section class="v" id="v-scan"><button class="o s np" style="margin-bottom:10px" onclick="goHome()">🏠 กลับหน้าหลัก</button><div class="card"><p style="margin-top:0">เลือกคาบที่ต้องการสแกน แล้วมองกล้องตรง ๆ ระบบจะสแกนและบันทึกเวลาอัตโนมัติ</p>
@@ -57,7 +58,7 @@ video,.shot img{width:100%;max-width:420px;border-radius:12px;background:#000;tr
  <div class="card sc"><b>ผู้เข้าอบรม</b> <small id="adn" style="color:var(--mu)"></small><table><tbody id="ab"></tbody></table></div></div></section>
 </main><div id="toast"></div>
 <script>
-const API='https://script.google.com/macros/s/AKfycby0__JfD-It1UadjGDNrIJ3PNA5v4qO6KbxjyRkVSMyaby8aVJgHMyeF2ZghrW73rBj/exec';
+const API='PASTE_APPS_SCRIPT_WEB_APP_URL_HERE';
 const MU='https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model/';
 const $=i=>document.getElementById(i),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 let D={trainees:[],att:[],leave:[],settings:{},now:''},code='',ml=0,stream=null,run=false,PH=[null,null,null],DS=[null,null,null];
@@ -73,8 +74,8 @@ $('dt').onchange=$('pd').onchange=()=>render();
 function stt(t,d,p){if(D.leave.some(l=>l.id==t.id&&l.date==d&&l.p==p))return['L'];
  const a=D.att.find(x=>x.id==t.id&&x.date==d&&x.p==p);if(a)return[a.s=='present'?'P':'S',a.time];
  const nd=D.now.slice(0,10),nt=D.now.slice(11),cut=p=='เช้า'?'10:00:00':'14:30:00';return(d<nd||(d==nd&&nt>cut))?['A']:['W']}
-const COL={P:'#22c55e',S:'#fb923c',A:'#ef4444',L:'#60a5fa'},NM={P:'เข้าอบรมแล้ว',S:'มาสาย',A:'ขาดอบรม',L:'ลากิจ'};
-const MK={P:'<span class="g">✔</span> เข้าอบรมแล้ว',S:'<span class="or">✔</span> มาสาย',A:'<span class="r">✘</span> ขาดอบรม',L:'<span class="b">ลากิจ</span>',W:'<span style="color:var(--mu)">รอสแกน</span>'};
+const COL={P:'#22c55e',S:'#fb923c',A:'#ef4444',L:'#60a5fa'},NM={P:'เข้าอบรมปกติ (ตามเวลา)',S:'กลุ่มมาสาย',A:'กลุ่มขาดอบรม',L:'กลุ่มลากิจ'};
+const MK={P:'<span class="g">✔</span> เข้าอบรมปกติ',S:'<span class="or">✔</span> มาสาย',A:'<span class="r">✘</span> ขาดอบรม',L:'<span class="b">ลากิจ</span>',W:'<span style="color:var(--mu)">รอสแกน</span>'};
 function pie(c,v){const x=c.getContext('2d'),t=v.reduce((a,b)=>a+b,0)||1;let a=-Math.PI/2;x.clearRect(0,0,150,150);
  if(!v.some(n=>n)){x.fillStyle='#14532d';x.beginPath();x.arc(75,75,70,0,7);x.fill();return}
  ['P','S','A','L'].forEach((k,i)=>{const w=v[i]/t*2*Math.PI;x.fillStyle=COL[k];x.beginPath();x.moveTo(75,75);x.arc(75,75,70,a,a+w);x.fill();a+=w})}
@@ -82,9 +83,10 @@ function cnt(list,d,p){const n={P:0,S:0,A:0,L:0};list.forEach(t=>{const k=stt(t,
 function render(){const d=$('dt').value,p=$('pd').value;if(!d)return;$('rt').textContent=`รายงานวันที่ ${d} คาบ${p} (${p=='เช้า'?'08.30-12.00':'13.00-16.00'} น.)`;
  const n=cnt(D.trainees,d,p);$('stats').innerHTML=['P','S','A','L'].map(k=>`<div class="st" style="border-color:${COL[k]}"><span>${NM[k]}</span><b style="color:${COL[k]}">${n[k]}</b>คน</div>`).join('');
  const gs={'ภาพรวมทั้งหมด':D.trainees};D.trainees.forEach(t=>(gs[t.org||'ไม่ระบุ']=gs[t.org||'ไม่ระบุ']||[]).push(t));
- $('pies').innerHTML=Object.keys(gs).map((g,i)=>{const c=cnt(gs[g],d,p);return`<div><canvas width=150 height=150 data-i="${i}"></canvas><b>${esc(g)}</b><small>${gs[g].length} คน</small><small><span class=g>●</span>${c.P} <span class=or>●</span>${c.S} <span class=r>●</span>${c.A} <span class=b>●</span>${c.L}</small></div>`}).join('');
+ $('pies').innerHTML=Object.keys(gs).map((g,i)=>{const c=cnt(gs[g],d,p);return`<div><canvas width=150 height=150 data-i="${i}"></canvas><b>${esc(g)}</b><small>${gs[g].length} คน</small>${['P','S','A','L'].map(k=>`<small style="text-align:left"><span style="color:${COL[k]}">●</span> ${NM[k]} ${c[k]} คน (${gs[g].length?Math.round(c[k]*100/gs[g].length):0}%)</small>`).join('')}</div>`}).join('');
  const ks=Object.keys(gs);document.querySelectorAll('#pies canvas').forEach(c=>{const n=cnt(gs[ks[c.dataset.i]],d,p);pie(c,[n.P,n.S,n.A,n.L])});
- $('tb').innerHTML=D.trainees.map(t=>{const s=stt(t,d,p);return`<tr><td>${esc(nm(t))}</td><td>${esc(t.org)}</td><td>${s[1]||'-'}</td><td>${MK[s[0]]}</td></tr>`}).join('')||'<tr><td colspan=4>ยังไม่มีผู้เข้าอบรม</td></tr>'}
+ $('tb').innerHTML=D.trainees.map(t=>{const s=stt(t,d,p);return`<tr><td>${esc(nm(t))}</td><td>${esc(t.org)}</td><td>${s[1]||'-'}</td><td>${MK[s[0]]}</td></tr>`}).join('')||'<tr><td colspan=4>ยังไม่มีผู้เข้าอบรม</td></tr>';
+ $('gl').innerHTML=['P','S','A','L'].map(k=>{const l=D.trainees.filter(t=>stt(t,d,p)[0]==k);return`<div><b style="color:${COL[k]}">${NM[k]} (${l.length})</b><ol style="margin:6px 0;padding-left:20px">${l.map(t=>`<li>${esc(nm(t))}</li>`).join('')||'<li style="list-style:none;color:var(--mu)">-</li>'}</ol></div>`}).join('')}
 // ---- กล้อง/ใบหน้า ----
 async function models(){if(ml)return;toast('กำลังโหลดระบบจดจำใบหน้า...');await Promise.all([faceapi.nets.tinyFaceDetector.loadFromUri(MU),faceapi.nets.faceLandmark68Net.loadFromUri(MU),faceapi.nets.faceRecognitionNet.loadFromUri(MU)]);ml=1}
 async function camOn(id){await models();camOff();try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:640}})}catch(e){return toast('เปิดกล้องไม่ได้ กรุณาอนุญาตการใช้กล้อง')}
